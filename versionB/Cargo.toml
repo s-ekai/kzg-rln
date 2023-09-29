@@ -13,4 +13,6 @@ ark-std = "0.3.0"
 ark-poly = "0.3.0"
 once_cell = "1.17.1"
 ark-crypto-primitives = "0.3.0"
+poseidon-rs = "0.0.10"
+ff = {package="ff_ce" , version="0.11", features = ["derive"]}
 

@@ -13,11 +13,18 @@ use ark_std::{test_rng, UniformRand};
 
 use once_cell::sync::Lazy;
 
+#[macro_use]
+extern crate ff;
+use ff::*;
+use poseidon_rs::{Fr as PoseudinFr, Poseidon};
+
 type UniPoly_381 = DensePolynomial<<Bls12_381 as PairingEngine>::Fr>;
 type KZG = KZG10<Bls12_381, UniPoly_381>;
 
 const EPOCH_LIMIT: u8 = 1;
 const DEGREE: usize = EPOCH_LIMIT as usize;
+const TREE_DEPTH: u8 = 3;
+const LEAF_COUNT: usize = 2_usize.pow(TREE_DEPTH as u32);
 
 static KEYS: Lazy<(Powers<Bls12_381>, VerifierKey<Bls12_381>)> = Lazy::new(|| {
     let rng = &mut test_rng();
@@ -43,9 +50,51 @@ static KEYS: Lazy<(Powers<Bls12_381>, VerifierKey<Bls12_381>)> = Lazy::new(|| {
     (powers, vk)
 });
 
-struct MerkleTree {
-    root: string,
+struct Tree {
+    leafs: [PoseudinFr; LEAF_COUNT],
+    root: PoseudinFr,
+    index: usize
+}
 
+impl Tree {
+
+    // INFO: init marke tree
+    fn new(degree: usize) -> Self {
+        let default_value = PoseudinFr::from_str("0").unwrap();
+        let poseidon = Poseidon::new();
+        let mut target_array: Vec<PoseudinFr> = Vec::new();
+        target_array.push(default_value.clone());
+        let default_leaf = poseidon.hash(target_array.clone()).unwrap();
+
+        Self {
+            leafs: [default_leaf; LEAF_COUNT],
+            root: default_leaf,
+            index: 0
+        }
+    }
+
+    // TODO: check if index < length of leafs
+    // TOOD: Do I need to return Result?
+    fn insert(&mut self, leaf: &String) {
+        let hashedLeaf = PoseudinFr::from_str(leaf).unwrap();
+        self.leafs[self.index] = hashedLeaf;
+        self.index = self.index + 1;
+        // self.root = calculate_root();
+    }
+
+    // TODO: I will change logic more smarter
+    fn calculate_root(&self) {
+
+        // let poseidon = Poseidon::new();
+        // let mut target_array: Vec<PoseudinFr> = Vec::new();
+
+        // // target_array.push(default_value.clone());
+        // let default_leaf = poseidon.hash(target_array.clone()).unwrap();
+
+        // for (index, &leaf) in self.leafs.iter().enumerate() {
+        //     if
+        // }
+    }
 }
 
 struct RLN {
@@ -180,6 +229,27 @@ impl User {
 }
 
 fn main() {
+
+
+    // start ============= how to use poseiodn
+    let b1: PoseudinFr = PoseudinFr::from_str(
+        "12242166908188651009877250812424843524687801523336557272219921456462821518061",
+    )
+    .unwrap();
+    let b2: PoseudinFr = PoseudinFr::from_str(
+        "12242166908188651009877250812424843524687801523336557272219921456462821518061",
+    )
+    .unwrap();
+    let mut big_arr: Vec<PoseudinFr> = Vec::new();
+    big_arr.push(b1.clone());
+    big_arr.push(b2.clone());
+    let poseidon = Poseidon::new();
+
+    let hoge = poseidon.hash(big_arr.clone()).unwrap();
+    println!("{}", hoge.to_string());
+
+    // end ============= how to use poseiodn
+
     let rng = &mut test_rng();
 
     let mut rln = RLN::new(EPOCH_LIMIT);
